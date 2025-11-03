@@ -1,61 +1,46 @@
 // server.js
 
-const http = require('http');
+const express = require("express");
+const cors = require("cors");
 
 // CORS 설정을 위한 헤더
-const headers = {
-  'Access-Control-Allow-Origin': "http://127.0.0.1:9000",
-  'Access-Control-Allow-Methods': 'OPTIONS, POST, GET, PUT, DELETE',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
 
-let data = { message: '여러분 화이팅!' };
+const app = express();
 
-const server = http.createServer((req, res) => {
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204, headers);
-    res.end();
-    return;
-  }
+app.use(
+  cors({
+    origin: "http://127.0.0.1:9000",
+    methods: ["OPTIONS", "POST", "GET", "PUT", "DELETE"],
+  })
+);
 
-  if (req.method === 'GET') {
-    res.writeHead(200, { 'Content-Type': 'application/json', ...headers });
-    res.end(JSON.stringify(data));
-  }
+app.use(express.json());
 
-  if (req.method === 'POST') {
-    let body = '';
-    req.on('data', (chunk) => {
-      body += chunk.toString();
-    });
+let data = { message: "여러분 화이팅!" };
 
-    req.on('end', () => {
-      data.message = body;
-      res.writeHead(200, headers);
-      res.end(`받은 POST 데이터: ${body}`);
-    });
-  }
-
-  if (req.method === 'PUT') {
-    let body = '';
-    req.on('data', (chunk) => {
-      body += chunk.toString();
-    });
-
-    req.on('end', () => {
-      data.message = body;
-      res.writeHead(200, headers);
-      res.end(`업데이트된 데이터: ${body}`);
-    });
-  }
-
-  if (req.method === 'DELETE') {
-    data = {};
-    res.writeHead(200, headers);
-    res.end('데이터가 삭제되었습니다.');
-  }
+app.get("/", (req, res) => {
+  res.json(data);
 });
 
-server.listen(3000, () => {
-  console.log('서버가 http://localhost:3000/ 에서 실행 중입니다.');
+app.post("/", (req, res) => {
+  const { message } = req.body;
+  if (!message) return res.status(400).send("message 필드가 필요합니다.");
+  data.message = message;
+  res.send(`받은 POST 데이터: ${message}`);
+});
+
+app.put("/", (req, res) => {
+  const { message } = req.body;
+  if (!message) return res.status(400).send("message 필드가 필요합니다.");
+  data.message = message;
+  res.send(`업데이트된 데이터: ${message}`);
+});
+
+app.delete("/", (req, res) => {
+  data = {};
+  res.send("데이터가 삭제되었습니다.");
+});
+
+app.listen(3000, () => {
+  console.log("서버가 http://localhost:3000/ 에서 실행 중입니다.");
 });
